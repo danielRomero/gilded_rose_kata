@@ -1,47 +1,82 @@
+AGED_BRIE = 'Aged Brie'
+SULFURAS_HAND_RAGNAROS = 'Sulfuras, Hand of Ragnaros'
+BACKSTAGE_PASSES_TAFKAL80ETC = 'Backstage passes to a TAFKAL80ETC concert'
+CONJURED = 'Conjured'
+
+class DefaultItem
+  def update(item)
+    update_sell_in(item)
+    update_quality(item)
+    check_min_max_values(item)
+    return item
+  end
+
+  def update_sell_in(item)
+    item.sell_in -= 1
+  end
+
+  def update_quality(item, quality_degradate_speed=1)
+    quality_degradate_speed *= 2 if item.sell_in < 0
+    item.quality -= (1 * quality_degradate_speed)
+  end
+
+  def check_min_max_values item
+    item.quality = 0 if item.quality < 0
+    item.quality = 50 if item.quality > 50
+  end
+
+end
+
+class AgedBrie < DefaultItem
+  def update(item)
+    update_sell_in(item)
+    update_quality(item, -1)
+    check_min_max_values(item)
+    return item
+  end
+end
+
+class SulfurasHandRagnaros < DefaultItem
+  def update(item)
+    return item
+  end
+end
+
+class BackstagePassesTafkal80etc < DefaultItem
+  def update_quality(item)
+    if item.quality < 50 and item.quality > 0
+      if item.sell_in < 10 and item.sell_in >= 5
+        item.quality += 2 
+      elsif item.sell_in < 5 and item.sell_in >= 0
+        item.quality += 3
+      elsif item.sell_in < 0
+        item.quality = 0
+      else
+        item.quality += 1
+      end
+    end
+  end
+end
+
+class Conjured < DefaultItem
+  def update_quality(item)
+    return item
+  end
+end
+
 def update_quality(items)
   items.each do |item|
-    if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
-      if item.quality > 0
-        if item.name != 'Sulfuras, Hand of Ragnaros'
-          item.quality -= 1
-        end
-      end
-    else
-      if item.quality < 50
-        item.quality += 1
-        if item.name == 'Backstage passes to a TAFKAL80ETC concert'
-          if item.sell_in < 11
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-          if item.sell_in < 6
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-        end
-      end
-    end
-    if item.name != 'Sulfuras, Hand of Ragnaros'
-      item.sell_in -= 1
-    end
-    if item.sell_in < 0
-      if item.name != "Aged Brie"
-        if item.name != 'Backstage passes to a TAFKAL80ETC concert'
-          if item.quality > 0
-            if item.name != 'Sulfuras, Hand of Ragnaros'
-              item.quality -= 1
-            end
-          end
-        else
-          item.quality = item.quality - item.quality
-        end
+    case item.name
+      when AGED_BRIE
+        AgedBrie.new.update(item)
+      when SULFURAS_HAND_RAGNAROS
+        SulfurasHandRagnaros.new.update(item)
+      when BACKSTAGE_PASSES_TAFKAL80ETC
+        BackstagePassesTafkal80etc.new.update(item)
+      when CONJURED
+        Conjured.new.update(item)
       else
-        if item.quality < 50
-          item.quality += 1
-        end
-      end
+        DefaultItem.new.update(item)
     end
   end
 end
